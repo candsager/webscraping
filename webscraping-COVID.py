@@ -15,13 +15,17 @@ from bs4 import BeautifulSoup
 
 
 
-url = 'https://www.worldometers.info/coronavirus/country/us'
-# Request in case 404 Forbidden error
+url = 'https://www.worldometers.info/coronavirus/country/us'  # Change to the URL you want to scrape
+
+# Request in case of 404 Forbidden error
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.3'}
 
+req = Request(url, headers=headers)
 
+webpage = urlopen(req).read()
 
-
+soup = BeautifulSoup(webpage, 'html.parser')
+print(soup.title.text)
 
 
 #SOME USEFUL FUNCTIONS IN BEAUTIFULSOUP
@@ -35,3 +39,51 @@ headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML
 #Limit = find with limit of 1
 #keyword: allText = Obj.find(id="title",class="text")
 
+table_rows = soup.findAll("tr")
+#print(table_rows[:1])
+
+state_death_ratio = ''
+state_best_testing = ""
+state_worst_testing = ""
+highest_death_ratio = 0.0
+high_test_ratio = 0.0
+low_test_ratio = 1000.0
+
+
+for row in table_rows[2:53]:
+    td = row.findAll("td")
+    state = td[1].text
+    total_cases = int(td[2].text.replace(",",""))
+    total_deaths = int(td[4].text.replace(",",""))
+    total_tested = int(td[10].text.replace(",",""))
+    population = int(td[12].text.replace(",",""))
+
+    death_ratio = total_deaths/total_cases
+    test_ratio = total_tested/population
+    print(state)
+    print(f'Death Ratio: {death_ratio}')
+    print(f'Test Ratio: {test_ratio}')
+
+    if death_ratio > highest_death_ratio:
+        highest_death_ratio = death_ratio
+        state_death_ratio = state
+    if test_ratio > high_test_ratio:
+        high_test_ratio = test_ratio
+        state_best_testing = state
+
+    if test_ratio < low_test_ratio:
+        low_test_ratio = test_ratio
+        state_worst_testing = state
+
+print()
+print()
+print("State with the highest death ratio is: ", state_death_ratio)
+print(f"Death Ratio: {highest_death_ratio:.2%}")
+print()
+print()
+print("State with the best testing ratio is:", state_best_testing)
+print(f"Test Ratio: {low_test_ratio:.2%}")
+print()
+print()
+print("State with the worst testing ratio is:",state_worst_testing)
+print(f"Test Ratio:{high_test_ratio:.2%}")
